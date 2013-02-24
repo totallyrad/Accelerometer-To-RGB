@@ -1,0 +1,77 @@
+
+// Init the Pins used for PWM
+int redPin = 3;
+int greenPin = 5;
+int bluePin = 6;
+
+//Analog read pins
+const int xPin = 0;
+const int yPin = 1;
+const int zPin = 2;
+
+//The minimum and maximum values that came from
+//the accelerometer while standing still
+//You very well may need to change these
+int minVal = 0;
+int maxVal = 500;
+
+
+//to hold the caculated values
+int x;
+int y;
+int z;
+
+
+// Init our Vars
+int currentColorValueRed;
+int currentColorValueGreen;
+int currentColorValueBlue;
+
+void setup()
+{
+  Serial.begin(9600);  
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  pinMode(bluePin, OUTPUT);
+}
+
+void loop()
+{
+  
+//read the analog values from the accelerometer
+
+  const int xRead = analogRead(xPin);
+  const int yRead = analogRead(yPin);
+  const int zRead = analogRead(zPin);
+  
+// Read the voltage on each analog pin then scale down to 0-255. 
+// The first two numbers set the range of input voltage that is mapped to 0-255. 
+
+  currentColorValueRed = map(xRead, 250, 550, 0, 255); 
+  currentColorValueBlue = map(yRead, 250, 550, 0, 255);
+  currentColorValueGreen = map(zRead, 250, 550, 0, 255);
+
+// Write the color to each pin using PWM and the value gathered above
+  analogWrite(redPin, currentColorValueRed);
+  analogWrite(bluePin, currentColorValueBlue);
+  analogWrite(greenPin, currentColorValueGreen);
+ 
+// This was a function to make the LEDs blink, uncomment to enable
+
+ //   delay(50); // wait a sec
+ //   analogWrite(redPin,0); 
+ //   analogWrite(bluePin,0); 
+ //   analogWrite(greenPin,0); 
+  
+  
+//This spits out the current RGB values so you can monitor. helpful for adjusting the Min-Max and sensor range. 
+
+  Serial.print("values for are R, G, B: ");
+  Serial.print(currentColorValueRed, DEC);    // print the acceleration in the X axis
+  Serial.print(" ");       // prints a space between the numbers
+  Serial.print(currentColorValueBlue, DEC);    // print the acceleration in the Y axis
+  Serial.print(" ");       // prints a space between the numbers
+  Serial.println(currentColorValueGreen, DEC);  // print the acceleration in the Z axis
+  delay(100);              // wait 100ms for next reading
+
+}
