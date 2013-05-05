@@ -1,77 +1,300 @@
+/*
+ Rainbow
 
-// Init the Pins used for PWM
-int redPin = 3;
-int greenPin = 5;
-int bluePin = 6;
+ Take an RGB LED through the colours of the rainbow using an analogue input taken from an accelerometer.
 
-//Analog read pins
+ Based on code first written by
+ By Jason Judge Created 21 April 2012
+
+ This code is in the public domain.
+
+ */
+ 
+const int numReadings = 100;     // Sets number of readings (smoothing amount. I chose a very high number to start with)
+
+// Setting up the smoothing int
+
+int readings[numReadings];      // the readings from the analog input
+int index = 0;                  // the index of the current reading
+int total = 0;                  // the running total
+int average = 0;                // the average
+ 
+ //Analog read pins for Accelerometer
 const int xPin = 0;
 const int yPin = 1;
 const int zPin = 2;
 
-//The minimum and maximum values that came from
-//the accelerometer while standing still
-//You very well may need to change these
-int minVal = 0;
-int maxVal = 500;
+// Outputs for RGB channels. I am using 12v Analog RGB Tape
+
+const int ledPinRed = 3;    // Red LED connected to analogue out pin
+const int ledPinGrn = 5;    // Green LED connected to analogue out pin
+const int ledPinBlu = 6;     // Blue LED connected to analogue out pin
+
+//For changing modes in Jason Judge's code. Left it in even though it's not doing anything. 
+
+ const int modeSwitchPin = 12;
 
 
-//to hold the caculated values
-int x;
-int y;
-int z;
+int accelVal = 0; // store the value coming from the accelerometer
 
+// Constants to define the ranges.
 
-// Init our Vars
-int currentColorValueRed;
-int currentColorValueGreen;
-int currentColorValueBlue;
+const int hueRedLow = 0;
+const int hueRedHigh = 255;
+const int hueBlue = 170;
 
-void setup()
+// The size of the angle of one sector (1/6 of a colour wheel), and of a complete
+// cycle of the colour wheel.
+
+const int angleMin = 0;
+const int angleSector = 60;
+const int angleMax = 360;
+
+const int brightMin = 0;
+const int brightMax = 255;
+
+// Work variables.
+
+// The potentiometer value is mapped to the range 0 to 360 (degrees).
+
+int potValueHue;
+
+// The hue is the range 0 (red) to 170 (blue) in rainbow
+// mode or 255 (red) in colour wheel mode.
+// The brightness ranges from 0 (dark) to 255 (full brightness)
+
+int hue, brightness;
+
+// The saturation is fixed at 255 (full) to remove blead-through of different
+// colours.
+// It could be linked to another potentiometer if a demonstration of hue
+// is desired.
+
+const int saturation = 255;
+
+// The brightess of each LED (0 to 255).
+
+unsigned int r, g, b;
+
+void setup()  
+
 {
-  Serial.begin(9600);  
-  pinMode(redPin, OUTPUT);
-  pinMode(greenPin, OUTPUT);
-  pinMode(bluePin, OUTPUT);
+  
+    // set a baud rate for serial monitoring
+    
+    Serial.begin(9600);
+    
+    // initialize all the readings to 0: 
+    for (int thisReading = 0; thisReading < numReadings; thisReading++)
+    readings[thisReading] = 0;   
+
+    // Set LED pins to output.
+    pinMode(ledPinRed, OUTPUT);
+    pinMode(ledPinGrn, OUTPUT);
+    pinMode(ledPinBlu, OUTPUT);
+
+    // Poteniometer analogue pin is an input.
+    // pinMode(potPinHue, INPUT);
+    
+    // pinMode for accelerometer
+    pinMode(xPin, INPUT);
+    pinMode(yPin, INPUT);
+    pinMode(zPin, INPUT);
+
+    // TODO: mode switch in a digital input.
+    // pinMode(modeSwitchPin, INPUT);
 }
 
-void loop()
+void loop()  
+
 {
   
-//read the analog values from the accelerometer
+   //read the analog values from the accelerometer and constrain the values
 
-  const int xRead = analogRead(xPin);
-  const int yRead = analogRead(yPin);
-  const int zRead = analogRead(zPin);
+   unsigned int xRead = analogRead(xPin); //changed from const int to unsigned just to see what happened. Not sure if this matters or not really. 
+   unsigned int yRead = analogRead(yPin);
+   unsigned int zRead = analogRead(zPin);
   
-// Read the voltage on each analog pin then scale down to 0-255. 
-// The first two numbers set the range of input voltage that is mapped to 0-255. 
+  /* 
+  
+  This next bit defines accelVal as an average of the X, Y and Z inputs
+  When using HSV Hue is what moves through the color spectrum as I understand it
+  so there's only one value that you need to adjust
+  
+  I decided on averaging the values of the three inputs
+  although I may experiment with just adding up the values to see if
+  that gives me a broader range of values
+  
+  */
+  
+  accelVal = (xRead+yRead+zRead)/3; 
+  
+  // define potPinHue as accelVal constrained to 150 through 400
+  // This was determined by monitoring accelVal while hitting the ball
+  // and identifying the higest and lowest values
+  
+  int potPinHue = constrain(accelVal, 150, 400); 
+  
+  // This summing section is straight from Jason's code, I don't pretend to really know all it's details
+  
+  // subtract the last reading:
+  total= total - readings[index];         
+  // read from the sensor:  
+  readings[index] = potPinHue; 
+  // add the reading to the total:
+  total= total + readings[index];       
+  // advance to the next position in the array:  
+  index = index + 1;                    
 
-  currentColorValueRed = map(xRead, 250, 550, 0, 255); 
-  currentColorValueBlue = map(yRead, 250, 550, 0, 255);
-  currentColorValueGreen = map(zRead, 250, 550, 0, 255);
+  // if we're at the end of the array...
+  if (index >= numReadings)              
+    // ...wrap around to the beginning: 
+    index = 0;                           
 
-// Write the color to each pin using PWM and the value gathered above
-  analogWrite(redPin, currentColorValueRed);
-  analogWrite(bluePin, currentColorValueBlue);
-  analogWrite(greenPin, currentColorValueGreen);
- 
-// This was a function to make the LEDs blink, uncomment to enable
-
- //   delay(50); // wait a sec
- //   analogWrite(redPin,0); 
- //   analogWrite(bluePin,0); 
- //   analogWrite(greenPin,0); 
+  // calculate the average:
+  average = total / numReadings;     
   
   
-//This spits out the current RGB values so you can monitor. helpful for adjusting the Min-Max and sensor range. 
+  // The Hue value is mapped to degrees - 0 to 360 - for convenience
+    potValueHue = map(analogRead(average), 150, 400, 0, 360);
 
-  Serial.print("values for are R, G, B: ");
-  Serial.print(currentColorValueRed, DEC);    // print the acceleration in the X axis
-  Serial.print(" ");       // prints a space between the numbers
-  Serial.print(currentColorValueBlue, DEC);    // print the acceleration in the Y axis
-  Serial.print(" ");       // prints a space between the numbers
-  Serial.println(currentColorValueGreen, DEC);  // print the acceleration in the Z axis
-  delay(100);              // wait 100ms for next reading
+  /* 
+  
+  Control the mode using a physical switch. I left it in since it doesn't seem to impact 
+  things even though I'm not using a switch to change modes. 
+  In a future revision I plan to use a timer of some sort to switch between the modes to give
+  some variety in how the game reacts. 
+  
+  Another idea could be to make a sudden impact change the mode
+  This could be accomplished by setting a threshold in the "average"
+  or XYZ reads that indicates a mode change
 
+  */
+    if (digitalRead(modeSwitchPin)) {
+        // Rainbow colour mode (infra-red to ultra-violet - well invisible to invisible  .
+
+        // The hue ranges from red (0) at 60 degrees to blue (170) at 300 degrees.
+        hue = constrain(map(potValueHue, angleSector, angleMax - angleSector, hueRedLow, hueBlue), hueRedLow, hueBlue);
+
+        // Brightness - fade up 0-60 degrees
+        brightness = constrain(map(potValueHue, angleMin, angleSector, brightMin, brightMax), brightMin, brightMax);
+
+        // Brightness fade down 300-360 degrees
+        brightness = brightness - constrain(map(potValueHue, angleMax - angleSector, angleMax, brightMin, brightMax), brightMin, brightMax);
+    } else { 
+        // Colour wheel mode (red to red, wrapped around in a cycle).
+
+        hue = map(potValueHue, angleMin, angleMax, hueRedLow, hueRedHigh);
+
+        // The brightness is fixed at full for the colour wheel. This could be
+        // linked to another poteniometer if that is a concept you wish to
+        // demonstrate.
+        brightness = 255;
+        
+    // Plan to add a while section here to make the Brightness flash when an impact is detected.
+    // This could be accomplished by setting a threshold in the "average"
+    /*
+    {
+      while(average > 300)
+      {
+        Flash();
+      }
+    
+    }*/
+    }
+
+    // Using HSBtoRGB to send to the RGB outputs
+    
+    HSBToRGB(hue, saturation, brightness, &r, &g, &b);
+
+    analogWrite(ledPinRed, r);
+    analogWrite(ledPinGrn, g);
+    analogWrite(ledPinBlu, b);
+    
+    //Monitoring values. 
+
+    Serial.print(" bright=");
+    Serial.print(brightness);
+    Serial.print(" hue=");
+    Serial.print(hue);
+    Serial.print(" red=");
+    Serial.print(r);
+    Serial.print(" green=");
+    Serial.print(g);
+    Serial.print(" blue=");
+    Serial.print(b);
+    Serial.print(" accelVal=");
+    Serial.print(accelVal);
+    Serial.println("");
+    delay(50);
+}
+
+/* Flash Function prototype
+
+    void Flash()
+    {
+    analogWrite(brightness, 255);
+    delay(50);
+    analogWrite(brightness, 0);
+    delay(50);
+    }
+  */  
+
+
+// HSBtoRGB function
+// This function taken from here:
+// http://eduardofv.com/read_post/179-Arduino-RGB-LED-HSV-Color-Wheel-
+
+    void HSBToRGB(
+    
+    unsigned int inHue, unsigned int inSaturation, unsigned int inBrightness,
+    unsigned int *oR, unsigned int *oG, unsigned int *oB )
+{
+    if (inSaturation == 0)
+    {
+        // achromatic (grey)
+        *oR = *oG = *oB = inBrightness;
+    }
+    else
+    {
+        unsigned int scaledHue = (inHue * 6);
+        unsigned int sector = scaledHue >> 8; // sector 0 to 5 around the color wheel
+        unsigned int offsetInSector = scaledHue - (sector << 8);  // position within the sector         
+        unsigned int p = (inBrightness * ( 255 - inSaturation )) >> 8;
+        unsigned int q = (inBrightness * ( 255 - ((inSaturation * offsetInSector) >> 8) )) >> 8;
+        unsigned int t = (inBrightness * ( 255 - ((inSaturation * ( 255 - offsetInSector )) >> 8) )) >> 8;
+
+        switch( sector ) {
+        case 0:
+            *oR = inBrightness;
+            *oG = t;
+            *oB = p;
+            break;
+        case 1:
+            *oR = q;
+            *oG = inBrightness;
+            *oB = p;
+            break;
+        case 2:
+            *oR = p;
+            *oG = inBrightness;
+            *oB = t;
+            break;
+        case 3:
+            *oR = p;
+            *oG = q;
+            *oB = inBrightness;
+            break;
+        case 4:
+            *oR = t;
+            *oG = p;
+            *oB = inBrightness;
+            break;
+        default:    // case 5:
+            *oR = inBrightness;
+            *oG = p;
+            *oB = q;
+            break;
+        }
+    }
 }
