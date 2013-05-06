@@ -9,6 +9,8 @@
  This code is in the public domain.
 
  */
+
+// Smoothing. Not sure if it's how I'm using it but it's not getting the results I'm hoping for yet. 
  
 const int numReadings = 100;     // Sets number of readings (smoothing amount. I chose a very high number to start with)
 
