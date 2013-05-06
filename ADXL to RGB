@@ -1,16 +1,15 @@
 /*
- Rainbow
+ LED Tetherball 
 
  Take an RGB LED through the colours of the rainbow using an analogue input taken from an accelerometer.
 
- Based on code first written by
- By Jason Judge Created 21 April 2012
+ Based on code first written by Jason Judge Created 21 April 2012
 
  This code is in the public domain.
 
  */
 
-// Smoothing. Not sure if it's how I'm using it but it's not getting the results I'm hoping for yet. 
+// Smoothing. Not sure if it's how I'm using it but it's not getting the results I'm hoping for yet. Looking for other solutions.
  
 const int numReadings = 100;     // Sets number of readings (smoothing amount. I chose a very high number to start with)
 
@@ -87,6 +86,7 @@ void setup()
     Serial.begin(9600);
     
     // initialize all the readings to 0: 
+
     for (int thisReading = 0; thisReading < numReadings; thisReading++)
     readings[thisReading] = 0;   
 
@@ -95,9 +95,6 @@ void setup()
     pinMode(ledPinGrn, OUTPUT);
     pinMode(ledPinBlu, OUTPUT);
 
-    // Poteniometer analogue pin is an input.
-    // pinMode(potPinHue, INPUT);
-    
     // pinMode for accelerometer
     pinMode(xPin, INPUT);
     pinMode(yPin, INPUT);
@@ -111,7 +108,7 @@ void loop()
 
 {
   
-   //read the analog values from the accelerometer and constrain the values
+   //read the analog values from the accelerometer
 
    unsigned int xRead = analogRead(xPin); //changed from const int to unsigned just to see what happened. Not sure if this matters or not really. 
    unsigned int yRead = analogRead(yPin);
@@ -140,25 +137,34 @@ void loop()
   // This summing section is straight from Jason's code, I don't pretend to really know all it's details
   
   // subtract the last reading:
+
   total= total - readings[index];         
   // read from the sensor:  
+
   readings[index] = potPinHue; 
   // add the reading to the total:
+
   total= total + readings[index];       
   // advance to the next position in the array:  
+
   index = index + 1;                    
 
   // if we're at the end of the array...
+
   if (index >= numReadings)              
-    // ...wrap around to the beginning: 
+
+  // ...wrap around to the beginning: 
+
     index = 0;                           
 
   // calculate the average:
+
   average = total / numReadings;     
   
   
   // The Hue value is mapped to degrees - 0 to 360 - for convenience
-    potValueHue = map(analogRead(average), 150, 400, 0, 360);
+
+  potValueHue = map(analogRead(average), 150, 400, 0, 360);
 
   /* 
   
