@@ -26,8 +26,6 @@ int currentColorValueRed;
 int currentColorValueGreen;
 int currentColorValueBlue;
 
-int currentColorValueTotal;
-
 int flashRate;
 
 void setup()
@@ -63,20 +61,16 @@ void loop()
   analogWrite(redPin, currentColorValueRed);
   analogWrite(bluePin, currentColorValueBlue);
   analogWrite(greenPin, currentColorValueGreen);
-
-  currentColorValueTotal = currentColorValueRed+currentColorValueBlue+currentColorValueGreen
  
 /* This was a function to make the LEDs blink, but will be used to make the lights strobe
 
- //   while (){
-  currentColorValueTotal > 800
-}
+ // while (currentColorValueTotal > 800){
  //   delay(flashRate); // wait a sec
  //   analogWrite(redPin,0); 
  //   analogWrite(bluePin,0); 
- //   analogWrite(greenPin,0); 
-
-*/
+ //   analogWrite(greenPin,0);
+}
+*/ End flash section
   
 //This spits out the current RGB values so you can monitor. helpful for adjusting the Min-Max and sensor range. 
 
