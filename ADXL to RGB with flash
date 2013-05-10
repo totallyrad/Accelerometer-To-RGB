@@ -1,4 +1,3 @@
-
 // Init the Pins used for PWM
 int redPin = 3;
 int greenPin = 5;
@@ -27,6 +26,10 @@ int currentColorValueRed;
 int currentColorValueGreen;
 int currentColorValueBlue;
 
+int currentColorValueTotal;
+
+int flashRate;
+
 void setup()
 {
   Serial.begin(9600);  
@@ -50,19 +53,30 @@ void loop()
   currentColorValueRed = map(xRead, 250, 550, 0, 255); 
   currentColorValueBlue = map(yRead, 250, 550, 0, 255);
   currentColorValueGreen = map(zRead, 250, 550, 0, 255);
+ 
+// Set flashRate relative to zRead and maps it to the slowest (highest value) to fastest (lowest value) in ms
+
+  flashRate = map(zRead, 250, 550, 50, 5);
+  
 
 // Write the color to each pin using PWM and the value gathered above
   analogWrite(redPin, currentColorValueRed);
   analogWrite(bluePin, currentColorValueBlue);
   analogWrite(greenPin, currentColorValueGreen);
- 
-// This was a function to make the LEDs blink, uncomment to enable
 
- //   delay(50); // wait a sec
+  currentColorValueTotal = currentColorValueRed+currentColorValueBlue+currentColorValueGreen
+ 
+/* This was a function to make the LEDs blink, but will be used to make the lights strobe
+
+ //   while (){
+  currentColorValueTotal > 800
+}
+ //   delay(flashRate); // wait a sec
  //   analogWrite(redPin,0); 
  //   analogWrite(bluePin,0); 
  //   analogWrite(greenPin,0); 
-  
+
+*/
   
 //This spits out the current RGB values so you can monitor. helpful for adjusting the Min-Max and sensor range. 
 
