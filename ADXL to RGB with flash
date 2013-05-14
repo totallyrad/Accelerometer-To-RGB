@@ -1,3 +1,15 @@
+/*
+Intent in the next iteration is to get flash function working on impact
+
+Implement "wait" state when minimal movement is detected for a period of time
+
+Also to implement code to calibrate itself over and over after restting itself
+http://arduino.cc/en/Tutorial/Calibration
+
+*/
+
+
+
 // Init the Pins used for PWM
 int redPin = 3;
 int greenPin = 5;
@@ -7,6 +19,7 @@ int bluePin = 6;
 const int xPin = 0;
 const int yPin = 1;
 const int zPin = 2;
+
 
 //The minimum and maximum values that came from
 //the accelerometer while standing still
